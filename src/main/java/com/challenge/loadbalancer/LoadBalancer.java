@@ -1,11 +1,14 @@
 package com.challenge.loadbalancer;
 
+import com.challenge.loadbalancer.strategies.BalancingStrategyContext;
+import com.challenge.loadbalancer.strategies.RoundRobinStrategy;
 import com.challenge.loadbalancer.util.FileMetadataProvider;
 import com.challenge.loadbalancer.util.IMetadataProvider;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,7 +30,9 @@ public class LoadBalancer {
         if (storage.size() == 0) return;
 
         // TODO: Set the balancing strategy
-
+        BalancingStrategyContext strategyContext = new BalancingStrategyContext();
+        RoundRobinStrategy roundRobinStrategy = new RoundRobinStrategy(storage);
+        strategyContext.setBalancingStrategy(roundRobinStrategy);
 
         try {
             InetAddress localAddress = InetAddress.getByName(LB_HOST_ADDRESS);
@@ -35,7 +40,7 @@ public class LoadBalancer {
 
             ExecutorService executorService = Executors.newFixedThreadPool(10);
             String targetServer = "http://localhost:8080"; // TODO: Replace with URL object
-            ClientRequestHandler clientRequestHandler = new ClientRequestHandler(targetServer);
+            ClientRequestHandler clientRequestHandler = new ClientRequestHandler(strategyContext, targetServer);
 
             server.createContext("/", exchange -> {
                 executorService.submit(() -> clientRequestHandler.handle(exchange));

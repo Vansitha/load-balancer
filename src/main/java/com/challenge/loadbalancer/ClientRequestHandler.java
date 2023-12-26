@@ -1,5 +1,6 @@
 package com.challenge.loadbalancer;
 
+import com.challenge.loadbalancer.strategies.BalancingStrategyContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.*;
@@ -13,7 +14,10 @@ import java.util.Map;
 public class ClientRequestHandler implements HttpHandler {
 
     URL targetServerURL;
-    public ClientRequestHandler(String targetServer) {
+    BalancingStrategyContext balancingStrategyContext;
+    public ClientRequestHandler(BalancingStrategyContext balancingStrategyContext, String targetServer) {
+        this.balancingStrategyContext = balancingStrategyContext;
+
         try {
             this.targetServerURL = new URL(targetServer);
         } catch (MalformedURLException e) {
@@ -25,8 +29,9 @@ public class ClientRequestHandler implements HttpHandler {
     public void handle(HttpExchange exchange) {
         if (targetServerURL == null) return;
 
+        System.out.println(balancingStrategyContext.getServerToHandleRequest().getUrlString());
+
         String logDetails = prepareLogDetails(exchange); // TODO: use a logger
-        System.out.println(logDetails);
 
         HttpURLConnection targetConnection = null;
         try {

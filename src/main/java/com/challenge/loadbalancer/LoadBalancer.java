@@ -8,7 +8,6 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,7 +28,6 @@ public class LoadBalancer {
         // If there are no backend servers online don't start up LB
         if (storage.size() == 0) return;
 
-        // TODO: Set the balancing strategy
         BalancingStrategyContext strategyContext = new BalancingStrategyContext();
         RoundRobinStrategy roundRobinStrategy = new RoundRobinStrategy(storage);
         strategyContext.setBalancingStrategy(roundRobinStrategy);

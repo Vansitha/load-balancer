@@ -1,5 +1,3 @@
-http://localhost:1000
-http://localhost:2000
-http://localhost:3000
-http://localhost:4000
-http://localhost:5000
+http://localhost/8566
+http://localhost/4564
+http://localhost/8053

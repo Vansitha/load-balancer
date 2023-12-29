@@ -34,6 +34,7 @@ public class ClientRequestHandler implements HttpHandler {
         String logDetails = prepareLogDetails(exchange); // TODO: use a logger
 
         HttpURLConnection targetConnection = null;
+        // TODO: Replace with try-with
         try {
             targetConnection = (HttpURLConnection) this.targetServerURL.openConnection();
             forwardRequestToServer(exchange, targetConnection);

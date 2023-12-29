@@ -10,7 +10,7 @@ public class ServerMetadata {
     private boolean isHealthy;
 
     public ServerMetadata(String urlString) throws MalformedURLException {
-        this.isHealthy = true; // TODO: Initially set to true but server can be offline also ?!?!
+        this.isHealthy = true; // NOTE: All servers assumed to be online initially.
         this.urlString = urlString;
         this.serverURL = new URL(this.urlString);
     }

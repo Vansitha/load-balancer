@@ -40,9 +40,16 @@ class TestServer {
         try {
             InetAddress localAddress = InetAddress.getByName("localhost");
             HttpServer server = HttpServer.create(new InetSocketAddress(localAddress, port), 0);
-            server.createContext("/", new RequestHandler());
-            server.start();
 
+            server.createContext("/", new RequestHandler());
+
+            // Route used by the load blancer to ping the server to check whether the server is still active or not
+            server.createContext("/health", exchange -> {
+                exchange.sendResponseHeaders(200, 0);
+                exchange.close();
+            })
+
+            server.start();
             System.out.println("Server started on port: " + port);
 
         } catch (UnknownHostException e) {

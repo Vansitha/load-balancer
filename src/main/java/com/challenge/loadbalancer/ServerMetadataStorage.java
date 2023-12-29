@@ -25,7 +25,27 @@ public class ServerMetadataStorage {
         }
     }
 
+    public void setServerActivity(String url, boolean status) {
+        for (var server : this.storage) {
+            if (server.getUrlString().equals(url)) {
+                server.setIsHealthy(status);
+                break;
+            }
+        }
+    }
+
     public List<ServerMetadata> getServerStorage() {
         return this.storage;
+    }
+
+    public List<ServerMetadata> getActiveServerList() {
+        List<ServerMetadata> activeServerList = new ArrayList<>();
+
+        for (var server : this.storage) {
+            if (server.getIsHealthy()) {
+                activeServerList.add(server);
+            }
+        }
+        return activeServerList;
     }
 }

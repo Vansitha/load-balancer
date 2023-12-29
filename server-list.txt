@@ -1,3 +1,4 @@
-http://localhost/8566
-http://localhost/4564
-http://localhost/8053
+http://localhost:1035
+http://localhost:6083
+http://localhost:2759
+http://localhost:8283

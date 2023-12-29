@@ -1,8 +1,13 @@
+local OS = "Unix";
+if package.config:sub(1,1) == '\\' then
+    OS = "Windows"
+end
+
 local SERVER_FILE_NAME = "TestServer"
 local SERVER_FILE_DIR = "./test_server/"
 local SERVER_FILE_PATH = SERVER_FILE_DIR .. SERVER_FILE_NAME .. ".java"
 local BUILD_DIR = SERVER_FILE_DIR .. "build"
-local HOSTNAME = "http://localhost/"
+local HOSTNAME = "http://localhost:"
 local OUTPUT_FILENAME = "server-list.txt"
 
 local function get_server_count()
@@ -14,7 +19,6 @@ local function get_server_count()
   if server_count == nil or server_count <= 0 then
     error("Invalid server instance count. Please provide a positive integer.")
   end
-
   return server_count
 end
 
@@ -36,20 +40,26 @@ local function start_servers(server_count)
 
   for _ = 1, server_count do
     local port = get_random_port_num()
-    -- & flag to run process in the background. 
-    local start_server_cmd = "java -cp " .. BUILD_DIR .. " " .. SERVER_FILE_NAME .. " " .. port .. " &"
-    local isSuccess = os.execute(start_server_cmd)
+    local start_server_cmd = ""
+    
+    if OS == "Windows" then
+      -- For Windows, use the 'start' command with '/B' to start the process in the background
+      start_server_cmd = "start /B java -cp " .. BUILD_DIR .. " " .. SERVER_FILE_NAME .. " " .. port
+    else
+      -- For Unix, simply execute the Java command
+      start_server_cmd = "java -cp " .. BUILD_DIR .. " " .. SERVER_FILE_NAME .. " " .. port .. " &"
+    end
+
     print("Executed: " .. start_server_cmd)
+    local isSuccess = os.execute(start_server_cmd)
 
     if isSuccess then
       table.insert(active_ports, port)
     end
   end
-
-  print() -- force a new line
-
   return active_ports
 end
+
 
 local function write_ports_to_file(active_ports)
   local file = io.open(OUTPUT_FILENAME, "w")
@@ -61,7 +71,6 @@ local function write_ports_to_file(active_ports)
   for _, port in pairs(active_ports) do
     file:write(HOSTNAME .. tostring(port).."\n")
   end
-
   file:close()
 end
 
@@ -79,7 +88,6 @@ local function run_script()
 
   -- Active ports written to output file for loadbalancer program to use as the input
   write_ports_to_file(active_ports)
-
 end
 
 run_script()

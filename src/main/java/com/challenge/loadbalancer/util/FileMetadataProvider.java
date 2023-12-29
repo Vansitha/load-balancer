@@ -31,6 +31,8 @@ public class FileMetadataProvider implements IMetadataProvider {
                 url = url.trim();
                 if (checkIsValidURL(url)) {
                     serverList.add(url);
+                } else {
+                    System.out.println("Does not match pattern"); // TODO: use a logger
                 }
             }
 
@@ -42,7 +44,7 @@ public class FileMetadataProvider implements IMetadataProvider {
     }
 
    private boolean checkIsValidURL(String url) {
-       String regex = "^(http|https)://[a-zA-Z0-9.-]+(:\\d{1,5})?([/\\w .-]*)*/?$";
+       String regex = "^http://localhost:\\d{1,5}$";
        Pattern pattern = Pattern.compile(regex);
        Matcher matcher = pattern.matcher(url);
 

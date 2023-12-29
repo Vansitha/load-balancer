@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,7 +26,10 @@ public class LoadBalancer {
         List<ServerMetadata> activeServerList = serverMetadataStorage.getActiveServerList();
 
         // If there are no backend servers online don't start up LB
-        if (activeServerList.size() == 0) return;
+        if (activeServerList.size() == 0) {
+            System.out.println("No servers available to start.");
+            return;
+        }
 
         BalancingStrategyContext strategyContext = new BalancingStrategyContext();
         RoundRobinStrategy roundRobinStrategy = new RoundRobinStrategy(activeServerList);
@@ -39,7 +41,8 @@ public class LoadBalancer {
 
             ExecutorService executorService = Executors.newFixedThreadPool(10);
             String targetServer = "http://localhost:8080"; // TODO: can remove since strategy is passed to the handler
-            ClientRequestHandler clientRequestHandler = new ClientRequestHandler(strategyContext, targetServer);
+            ClientRequestHandler clientRequestHandler = new ClientRequestHandler(strategyContext);
+
 
             server.createContext("/", exchange -> {
                 executorService.submit(() -> clientRequestHandler.handle(exchange));

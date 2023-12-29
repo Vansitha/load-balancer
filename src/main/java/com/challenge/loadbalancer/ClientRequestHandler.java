@@ -5,7 +5,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.List;
@@ -13,35 +12,26 @@ import java.util.Map;
 
 public class ClientRequestHandler implements HttpHandler {
 
-    URL targetServerURL;
     BalancingStrategyContext balancingStrategyContext;
-    public ClientRequestHandler(BalancingStrategyContext balancingStrategyContext, String targetServer) {
+    public ClientRequestHandler(BalancingStrategyContext balancingStrategyContext) {
         this.balancingStrategyContext = balancingStrategyContext;
-
-        try {
-            this.targetServerURL = new URL(targetServer);
-        } catch (MalformedURLException e) {
-            System.out.println(e.getMessage()); // TODO: Use logger
-        }
     }
 
     @Override
     public void handle(HttpExchange exchange) {
-        if (targetServerURL == null) return;
 
-        System.out.println(balancingStrategyContext.getServerToHandleRequest().getUrlString());
-
+        URL serverUrl = balancingStrategyContext.getServerToHandleRequest().getServerURL();
         String logDetails = prepareLogDetails(exchange); // TODO: use a logger
 
-        HttpURLConnection targetConnection = null;
         // TODO: Replace with try-with
+        HttpURLConnection targetConnection = null;
         try {
-            targetConnection = (HttpURLConnection) this.targetServerURL.openConnection();
+            targetConnection = (HttpURLConnection) serverUrl.openConnection();
             forwardRequestToServer(exchange, targetConnection);
             forwardResponseToClient(exchange, targetConnection);
 
         } catch (IOException e) {
-            System.out.println(e.getMessage()); // TODO: use a logger
+            System.out.println("handle: Could not establish connection"); // TODO: use a logger
 
         } finally {
             targetConnection.disconnect();
@@ -55,7 +45,7 @@ public class ClientRequestHandler implements HttpHandler {
             targetConnection.setDoOutput(true);
 
         } catch (ProtocolException e){
-            System.out.println(e.getMessage()); // TODO: use a logger
+            System.out.println("forwardRequestToServer: Could not get request method"); // TODO: use a logger
             return;
         }
 
@@ -69,7 +59,7 @@ public class ClientRequestHandler implements HttpHandler {
             }
 
         } catch (IOException e) {
-            System.out.println(e.getMessage()); // TODO: use logger
+            System.out.println("forwardRequest: could not send body"); // TODO: use a logger
         }
     }
 
@@ -81,7 +71,7 @@ public class ClientRequestHandler implements HttpHandler {
             exchange.sendResponseHeaders(responseCode, 0);
 
         } catch (IOException e) {
-            System.out.println(e.getMessage()); // TODO: Implement logging
+            System.out.println("sendtoclient: could not send the request method"); // TODO: use a logger
             return;
         }
 
@@ -95,7 +85,7 @@ public class ClientRequestHandler implements HttpHandler {
             }
 
         } catch (IOException e) {
-            System.out.println(e.getMessage()); // TODO: Implement logging
+            System.out.println("sendtoclient: could not send body"); // TODO: use a logger
         }
     }
 

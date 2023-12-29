@@ -47,7 +47,7 @@ class TestServer {
             server.createContext("/health", exchange -> {
                 exchange.sendResponseHeaders(200, 0);
                 exchange.close();
-            })
+            });
 
             server.start();
             System.out.println("Server started on port: " + port);

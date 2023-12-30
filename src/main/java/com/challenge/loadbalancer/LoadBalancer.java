@@ -1,7 +1,10 @@
 package com.challenge.loadbalancer;
 
+import com.challenge.loadbalancer.healthmonitor.IHealthMonitor;
+import com.challenge.loadbalancer.healthmonitor.LoadBalancerHealthMonitor;
 import com.challenge.loadbalancer.strategies.BalancingStrategyContext;
 import com.challenge.loadbalancer.strategies.RoundRobinStrategy;
+import com.challenge.loadbalancer.strategies.Strategy;
 import com.challenge.loadbalancer.util.FileMetadataProvider;
 import com.challenge.loadbalancer.util.IMetadataProvider;
 import com.sun.net.httpserver.HttpServer;
@@ -25,7 +28,8 @@ public class LoadBalancer {
         ServerMetadataStorage serverMetadataStorage = new ServerMetadataStorage(serverList);
         List<ServerMetadata> activeServerList = serverMetadataStorage.getActiveServerList();
 
-        // If there are no backend servers online don't start up LB
+        // Can still start is the servers are inactive, this just checks whether the list is empty
+        // TODO: Change to all server list
         if (activeServerList.size() == 0) {
             System.out.println("No servers available to start.");
             return;
@@ -35,14 +39,19 @@ public class LoadBalancer {
         RoundRobinStrategy roundRobinStrategy = new RoundRobinStrategy(activeServerList);
         strategyContext.setBalancingStrategy(roundRobinStrategy);
 
+        startLoadBalancer(strategyContext);
+        // TODO: Do this in a separate thread
+        IHealthMonitor healthMonitor = new LoadBalancerHealthMonitor();
+        healthMonitor.checkHealth(serverMetadataStorage.getServerStorage());
+    }
+
+    private static void startLoadBalancer(BalancingStrategyContext strategyContext) {
         try {
             InetAddress localAddress = InetAddress.getByName(LB_HOST_ADDRESS);
             HttpServer server = HttpServer.create(new InetSocketAddress(localAddress, OPEN_PORT), 0);
 
             ExecutorService executorService = Executors.newFixedThreadPool(10);
-            String targetServer = "http://localhost:8080"; // TODO: can remove since strategy is passed to the handler
             ClientRequestHandler clientRequestHandler = new ClientRequestHandler(strategyContext);
-
 
             server.createContext("/", exchange -> {
                 executorService.submit(() -> clientRequestHandler.handle(exchange));
@@ -54,4 +63,5 @@ public class LoadBalancer {
             throw new RuntimeException(e);
         }
     }
+
 }

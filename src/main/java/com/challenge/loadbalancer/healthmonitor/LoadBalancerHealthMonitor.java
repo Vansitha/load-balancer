@@ -7,7 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
-public class LoadBalancerHealthMonitor implements IHealthMonitor {
+public class LoadBalancerHealthMonitor implements IHealthMonitor, Runnable {
 
     @Override
     public void checkHealth(List<ServerMetadata> serverList) {
@@ -15,6 +15,11 @@ public class LoadBalancerHealthMonitor implements IHealthMonitor {
             boolean status = pingServer(server.getServerURL());
             server.setIsHealthy(status);
         }
+    }
+
+    @Override
+    public void run() {
+        
     }
 
     private boolean pingServer(URL url) {

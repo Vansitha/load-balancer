@@ -1,23 +1,24 @@
 package com.challenge.loadbalancer;
 
-import com.challenge.loadbalancer.healthmonitor.IHealthMonitor;
 import com.challenge.loadbalancer.healthmonitor.LoadBalancerHealthMonitor;
 import com.challenge.loadbalancer.strategies.BalancingStrategyContext;
 import com.challenge.loadbalancer.strategies.RoundRobinStrategy;
-import com.challenge.loadbalancer.strategies.Strategy;
 import com.challenge.loadbalancer.util.FileMetadataProvider;
 import com.challenge.loadbalancer.util.IMetadataProvider;
 import com.sun.net.httpserver.HttpServer;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class LoadBalancer {
 
-    private final static String LB_HOST_ADDRESS = "127.0.0.1";
+    private final static String HOST_ADDRESS = "127.0.0.1";
     private final static int OPEN_PORT = 80;
 
     public static void main(String[] args) {
@@ -39,24 +40,23 @@ public class LoadBalancer {
         RoundRobinStrategy roundRobinStrategy = new RoundRobinStrategy(activeServerList);
         strategyContext.setBalancingStrategy(roundRobinStrategy);
 
-        startLoadBalancer(strategyContext);
         // TODO: Do this in a separate thread
-        IHealthMonitor healthMonitor = new LoadBalancerHealthMonitor();
+        LoadBalancerHealthMonitor healthMonitor = new LoadBalancerHealthMonitor();
         healthMonitor.checkHealth(serverMetadataStorage.getServerStorage());
+        // startHealthMonitor(healthMonitor);
+
+        startLoadBalancer(strategyContext);
     }
 
     private static void startLoadBalancer(BalancingStrategyContext strategyContext) {
         try {
-            InetAddress localAddress = InetAddress.getByName(LB_HOST_ADDRESS);
+            InetAddress localAddress = InetAddress.getByName(HOST_ADDRESS);
             HttpServer server = HttpServer.create(new InetSocketAddress(localAddress, OPEN_PORT), 0);
 
             ExecutorService executorService = Executors.newFixedThreadPool(10);
             ClientRequestHandler clientRequestHandler = new ClientRequestHandler(strategyContext);
 
-            server.createContext("/", exchange -> {
-                executorService.submit(() -> clientRequestHandler.handle(exchange));
-            });
-
+            server.createContext("/", exchange -> executorService.submit(() -> clientRequestHandler.handle(exchange)));
             server.start();
 
         } catch (IOException e) {
@@ -64,4 +64,8 @@ public class LoadBalancer {
         }
     }
 
+    private static void startHealthMonitor(LoadBalancerHealthMonitor healthMonitor) {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(healthMonitor, 1, 5, TimeUnit.SECONDS);
+    }
 }

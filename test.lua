@@ -76,7 +76,11 @@ end
 local function run_script()
     -- Used to kill all running server instances. Probably not a good idea to kill all java programs, but it'll will work for now.
     if arg[1] == "--kill" then
-        os.execute("killall java")
+        if OS == "Unix" then
+            os.execute("killall java")
+        else
+            os.execute("taskkill /f /im java.exe")
+        end
         return
     end
 

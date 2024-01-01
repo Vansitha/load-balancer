@@ -41,10 +41,12 @@ public class LoadBalancer {
         strategyContext.setBalancingStrategy(roundRobinStrategy);
 
         // TODO: Do this in a separate thread
-        LoadBalancerHealthMonitor healthMonitor = new LoadBalancerHealthMonitor();
-        healthMonitor.checkHealth(serverMetadataStorage.getServerStorage());
-        // startHealthMonitor(healthMonitor);
+        LoadBalancerHealthMonitor healthMonitor = new LoadBalancerHealthMonitor(serverMetadataStorage);
+        // Dependency inject storage
+        // TODO: Will need to rethink server storage implementation. Should be a singleton
+        healthMonitor.checkHealth();
 
+        startHealthMonitor(healthMonitor, 10); // TODO: take as cmd argument
         startLoadBalancer(strategyContext);
     }
 
@@ -64,8 +66,8 @@ public class LoadBalancer {
         }
     }
 
-    private static void startHealthMonitor(LoadBalancerHealthMonitor healthMonitor) {
+    private static void startHealthMonitor(LoadBalancerHealthMonitor healthMonitor, int checkPeriod) {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(healthMonitor, 1, 5, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(healthMonitor, 1, checkPeriod, TimeUnit.SECONDS);
     }
 }

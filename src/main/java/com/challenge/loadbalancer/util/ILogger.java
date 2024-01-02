@@ -2,8 +2,10 @@ package com.challenge.loadbalancer.util;
 
 public interface ILogger {
 
-    void error(String message);
-    void information(String message);
-    void warning(String message);
+    void error(String message, String className);
+
+    void information(String message, String className);
+
+    void warning(String message, String className);
 
 }

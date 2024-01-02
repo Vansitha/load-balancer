@@ -22,16 +22,16 @@ public class LoadBalancer {
     private final static int OPEN_PORT = 80;
 
     public static void main(String[] args) {
-        String filepath = "server-list.txt"; // TODO: Get from cmd args
+        int probeIntervalSeconds = 10; // TODO: Can get from cmd arg
+        String filepath = "server-list.txt";  // Always the same for file provider impl, so cmd arg not required.
+
         IMetadataProvider metadataProvider = new FileMetadataProvider(filepath);
         List<String> serverList = metadataProvider.getServerList();
 
         ServerMetadataStorage serverMetadataStorage = new ServerMetadataStorage(serverList);
         List<ServerMetadata> activeServerList = serverMetadataStorage.getActiveServerList();
 
-        // Can still start is the servers are inactive, this just checks whether the list is empty
-        // TODO: Change to all server list
-        if (activeServerList.size() == 0) {
+        if (serverMetadataStorage.getServerStorage().size() == 0) {
             System.out.println("No servers available to start.");
             return;
         }
@@ -39,15 +39,10 @@ public class LoadBalancer {
         BalancingStrategyContext strategyContext = new BalancingStrategyContext();
         RoundRobinStrategy roundRobinStrategy = new RoundRobinStrategy(activeServerList);
         strategyContext.setBalancingStrategy(roundRobinStrategy);
-
-        // TODO: Do this in a separate thread
-        LoadBalancerHealthMonitor healthMonitor = new LoadBalancerHealthMonitor(serverMetadataStorage);
-        // Dependency inject storage
-        // TODO: Will need to rethink server storage implementation. Should be a singleton
-        healthMonitor.checkHealth();
-
-        startHealthMonitor(healthMonitor, 10); // TODO: take as cmd argument
         startLoadBalancer(strategyContext);
+
+        LoadBalancerHealthMonitor healthMonitor = new LoadBalancerHealthMonitor(serverMetadataStorage);
+        startHealthMonitor(healthMonitor, probeIntervalSeconds);
     }
 
     private static void startLoadBalancer(BalancingStrategyContext strategyContext) {
@@ -55,7 +50,8 @@ public class LoadBalancer {
             InetAddress localAddress = InetAddress.getByName(HOST_ADDRESS);
             HttpServer server = HttpServer.create(new InetSocketAddress(localAddress, OPEN_PORT), 0);
 
-            ExecutorService executorService = Executors.newFixedThreadPool(10);
+            int poolSize = 10;
+            ExecutorService executorService = Executors.newFixedThreadPool(poolSize);
             ClientRequestHandler clientRequestHandler = new ClientRequestHandler(strategyContext);
 
             server.createContext("/", exchange -> executorService.submit(() -> clientRequestHandler.handle(exchange)));
@@ -66,8 +62,10 @@ public class LoadBalancer {
         }
     }
 
-    private static void startHealthMonitor(LoadBalancerHealthMonitor healthMonitor, int checkPeriod) {
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(healthMonitor, 1, checkPeriod, TimeUnit.SECONDS);
+    private static void startHealthMonitor(LoadBalancerHealthMonitor healthMonitor, int probeInterval) {
+        Runnable checkHealth = healthMonitor::checkHealth;
+        int poolSize = 1;
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(poolSize);
+        scheduler.scheduleAtFixedRate(checkHealth, 1, probeInterval, TimeUnit.SECONDS);
     }
 }

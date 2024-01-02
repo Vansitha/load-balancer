@@ -12,7 +12,7 @@ local OUTPUT_FILENAME = "server-list.txt"
 
 local function get_server_count()
     if #arg ~= 1 then
-        error("Usage: lua test.lua <total-servers>")
+        error("Usage: lua server-runner.lua <total-servers>")
     end
 
     local server_count = tonumber(arg[1]);

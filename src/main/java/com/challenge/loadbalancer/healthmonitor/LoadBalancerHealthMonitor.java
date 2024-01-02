@@ -4,9 +4,10 @@ import com.challenge.loadbalancer.ServerMetadataStorage;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
-public class LoadBalancerHealthMonitor implements IHealthMonitor, Runnable {
+public class LoadBalancerHealthMonitor implements IHealthMonitor {
 
     private final ServerMetadataStorage storage;
 
@@ -15,17 +16,19 @@ public class LoadBalancerHealthMonitor implements IHealthMonitor, Runnable {
     }
 
     @Override
-    public void run() {
-        checkHealth();
-    }
-
-    @Override
     public void checkHealth() {
 
         for (var server : this.storage.getServerStorage()) {
-            boolean status = pingServer(server.getServerURL());
-            System.out.println(server.getUrlString() + ": " + status); // Temp
-            this.storage.setServerActivity(server.getUrlString(), status);
+            try {
+                String path = "/health-check";
+                URL endpoint = new URL(server.getServerURL(), path);
+                boolean status = pingServer(endpoint);
+                System.out.println(server.getUrlString() + ": " + status); // Temp
+                this.storage.setServerActivity(server.getUrlString(), status);
+
+            } catch (MalformedURLException e) {
+                System.out.println(e.getMessage()); // TODO: Use logger
+            }
         }
     }
 
@@ -42,7 +45,7 @@ public class LoadBalancerHealthMonitor implements IHealthMonitor, Runnable {
             }
 
         } catch (IOException e) {
-            // System.out.println(e.getMessage()); // TODO: Replace with logging
+            System.out.println(e.getMessage()); // TODO: Replace with logging
         } finally {
             if (urlConnection != null) urlConnection.disconnect();
         }

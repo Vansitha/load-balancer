@@ -10,7 +10,7 @@ It's still under development. Just a couple of things fix and iron out.
 - <b>Logging:</b> Maintains logs to track load balancer activities.
 - Includes a script for setting up and managing a fleet of servers for testing purposes.
 
-## Load Balancer Setup Guide
+## Setup Guide
 
 Begin by cloning the repository using the following command:
 
@@ -20,21 +20,22 @@ git clone https://github.com/Vansitha/load-balancer.git
 
 After cloning, navigate to the root directory of the cloned repository.
 
-### Prepare the Server Fleet
+### Boot up the Server Fleet
 
-Within the root directory, locate the `server.lua` file. This script is responsible for creating a fleet of servers.
+Within the root directory, locate the `server-runner.lua` file. This script is responsible for creating a fleet of
+servers.
 Before that make sure that you have Lua is installed on your system. Follow
 the [installation guide](https://www.lua.org/start.html) for setup instructions. I recommend that you install using
 version 5.3.
 
 - **Windows Users**: Run the script with the specified version using:
   ```bash
-  lua53 server.lua <number-of-server-instances>
+  lua53 server-runner.lua <number-of-server-instances>
   ```
 
 - **Unix/Mac OS Users**: Execute the script with:
   ```bash
-  lua server.lua <number-of-server-instances>
+  lua server-runner.lua <number-of-server-instances>
   ```
 
 After execution, the ``server-list.txt`` file will be generated, listing the running backend servers along

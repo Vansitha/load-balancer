@@ -1,7 +1,6 @@
 # Load Balancer
 
 Built out of curiosity to learn how application load balancers work under the hood.
-It's still under development. Just a couple of things fix and iron out.
 
 ## Features
 
@@ -29,6 +28,7 @@ the [installation guide](https://www.lua.org/start.html) for setup instructions.
 version 5.3.
 
 - **Windows Users**: Run the script with the specified version using:
+
   ```bash
   lua53 server-runner.lua <number-of-server-instances>
   ```
@@ -38,7 +38,7 @@ version 5.3.
   lua server-runner.lua <number-of-server-instances>
   ```
 
-After execution, the ``server-list.txt`` file will be generated, listing the running backend servers along
+After execution, the `server-list.txt` file will be generated, listing the running backend servers along
 with their respective addresses. Port numbers will be automatically assigned to each server. Below is an example
 representation of the file content:
 
